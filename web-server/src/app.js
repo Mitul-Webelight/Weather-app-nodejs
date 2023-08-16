@@ -1,6 +1,8 @@
 const path = require('path')
 const express = require('express')
 const hbs = require('hbs')
+const geocode = require('./utils/geocode')
+const forecast = require('./utils/forecast')
 
 const app = express()
 
@@ -43,10 +45,22 @@ app.get('/weather', (req, res) => {
         })
     }
 
-    res.send({
-        forecast: 'It is Sunny',
-        location: 'Ahmedabad',
-        address: req.query.address
+    geocode(req.query.address, (error, { latitude, longitude, location } = {}) => {
+        if (error) {
+            return res.send({ error })
+        }
+
+        forecast(latitude, longitude, (error, forecastData) => {
+            if (error) {
+                return res.send({ error })
+            }
+
+            res.send({
+                forecast: forecastData,
+                location,
+                address: req.query.address
+            })
+        })
     })
 })
 
@@ -79,6 +93,6 @@ app.get('*', (req, res) => {
     })
 })
 
-app.listen(5656, () => {
-    console.log('Server is up on port 5656.')
+app.listen(3000, () => {
+    console.log('Server is up on port 3000.')
 })
